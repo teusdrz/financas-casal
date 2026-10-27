@@ -1,0 +1,31 @@
+# Blueprint do Render (New > Blueprint > selecione o repositorio).
+#
+# IMPORTANTE: o banco SQLite e um arquivo. No Render, o disco do servico e apagado
+# a cada deploy/reinicio, EXCETO quando ha um "Persistent Disk" montado.
+# Disco persistente exige plano pago (starter). Por isso este blueprint usa "starter".
+# Para testar no plano gratuito, troque plan para "free" e remova o bloco "disk"
+# (os dados serao perdidos a cada deploy; use o backup JSON da tela Integracoes).
+services:
+  - type: web
+    name: financas-casal
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.18.0
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SESSION_TTL_HOURS
+        value: "72"
+      - key: DB_PATH
+        value: /var/data/financas.sqlite
+    disk:
+      name: financas-data
+      mountPath: /var/data
+      sizeGB: 1
