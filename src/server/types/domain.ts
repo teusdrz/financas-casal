@@ -35,6 +35,7 @@ export interface User {
   displayName: string;
   profileId: ProfileId;
   feedToken: string;
+  avatarDataUrl: string | null;
 }
 
 export interface UserRecord extends User {

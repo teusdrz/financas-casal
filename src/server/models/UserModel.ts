@@ -10,6 +10,7 @@ function toRecord(row: Row): UserRecord {
     profileId: asString(row.profile_id) as ProfileId,
     passwordHash: asString(row.password_hash),
     feedToken: asString(row.feed_token),
+    avatarDataUrl: typeof row.avatar_data_url === "string" ? row.avatar_data_url : null,
   };
 }
 
@@ -49,5 +50,9 @@ export const UserModel = {
 
   updateFeedToken(id: number, token: string): void {
     getDatabase().run("UPDATE users SET feed_token = ? WHERE id = ?", [token, id]);
+  },
+
+  updateAvatar(id: number, avatarDataUrl: string | null): void {
+    getDatabase().run("UPDATE users SET avatar_data_url = ? WHERE id = ?", [avatarDataUrl, id]);
   },
 };

@@ -31,6 +31,8 @@ export class SettingsController implements PageController {
       feedUrl,
       googleCalendar,
       onSyncGoogleCalendar: () => void this.syncGoogleCalendar(),
+      onProfilePhoto: (file) => void this.profilePhoto(file),
+      onRemoveProfilePhoto: () => void this.removeProfilePhoto(),
       notificationState: this.notifications.permissionLabel(),
       onCopyFeed: () => void this.copy(feedUrl),
       onRegenerateFeed: () => void this.regenerate(),
@@ -74,6 +76,66 @@ export class SettingsController implements PageController {
       this.refresh();
     } catch (error) {
       reportError(error, "Falha ao sincronizar compromissos");
+    }
+  }
+
+  private async profilePhoto(file: File): Promise<void> {
+    if (!file.type.startsWith("image/")) {
+      toast("Arquivo invalido", "Escolha uma imagem.", "error");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Imagem muito grande", "Escolha uma imagem de ate 10 MB.", "error");
+      return;
+    }
+
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.src = imageUrl;
+      try {
+        await image.decode();
+      } finally {
+        URL.revokeObjectURL(imageUrl);
+      }
+
+      const size = Math.min(image.naturalWidth, image.naturalHeight);
+      if (size === 0) throw new Error("A imagem selecionada nao pode ser aberta.");
+      const sourceX = (image.naturalWidth - size) / 2;
+      const sourceY = (image.naturalHeight - size) / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Nao foi possivel processar a imagem neste navegador.");
+      context.drawImage(image, sourceX, sourceY, size, size, 0, 0, canvas.width, canvas.height);
+
+      let avatarDataUrl = "";
+      for (const quality of [0.82, 0.68, 0.52]) {
+        avatarDataUrl = canvas.toDataURL("image/jpeg", quality);
+        const base64 = avatarDataUrl.split(",")[1] ?? "";
+        if (Math.floor((base64.length * 3) / 4) <= 256 * 1024) break;
+        avatarDataUrl = "";
+      }
+      if (!avatarDataUrl) throw new Error("Nao foi possivel reduzir a foto para o tamanho permitido.");
+
+      const { user } = await Api.updateAvatar(avatarDataUrl);
+      store.set({ user });
+      toast("Foto atualizada", "Sua foto de perfil foi salva.", "success");
+      this.refresh();
+    } catch (error) {
+      reportError(error, "Nao foi possivel salvar a foto");
+    }
+  }
+
+  private async removeProfilePhoto(): Promise<void> {
+    try {
+      const { user } = await Api.updateAvatar(null);
+      store.set({ user });
+      toast("Foto removida", "Sua foto de perfil foi removida.", "success");
+      this.refresh();
+    } catch (error) {
+      reportError(error, "Nao foi possivel remover a foto");
     }
   }
 

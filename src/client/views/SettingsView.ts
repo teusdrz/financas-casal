@@ -10,6 +10,8 @@ export interface SettingsHandlers {
   onSyncGoogleCalendar(): void;
   onCopyFeed(): void;
   onRegenerateFeed(): void;
+  onProfilePhoto(file: File): void;
+  onRemoveProfilePhoto(): void;
   onImport(file: File): void;
   onChangePassword(current: string, next: string): Promise<string | null>;
   onEnableNotifications(): void;
@@ -62,6 +64,13 @@ export function renderSettings(container: HTMLElement, user: User, handlers: Set
     const file = fileInput.files?.[0];
     if (file) handlers.onImport(file);
     fileInput.value = "";
+  });
+
+  const photoInput = h("input", { type: "file", accept: "image/*", class: "sr-only", id: "profile-photo-file" });
+  photoInput.addEventListener("change", () => {
+    const file = photoInput.files?.[0];
+    if (file) handlers.onProfilePhoto(file);
+    photoInput.value = "";
   });
 
   const current = h("input", { class: "input", type: "password", autocomplete: "current-password", required: true });
@@ -159,6 +168,27 @@ export function renderSettings(container: HTMLElement, user: User, handlers: Set
           "Alertas na tela para eventos de hoje e amanha",
           h("p", { class: "muted" }, `Status do navegador: ${handlers.notificationState}`),
           h("div", { class: "btn-row" }, button("Ativar notificacoes do navegador", { icon: "bell", variant: "ghost", onClick: handlers.onEnableNotifications }))
+        ),
+        card(
+          "Foto de perfil",
+          `Foto pessoal da conta ${user.displayName}`,
+          h(
+            "div",
+            { class: "profile-photo-row" },
+            user.avatarDataUrl
+              ? h("img", { class: "profile-photo-preview", src: user.avatarDataUrl, alt: `Foto de perfil de ${user.displayName}` })
+              : h("div", { class: "profile-photo-preview", "aria-hidden": "true" }, user.displayName.charAt(0)),
+            h(
+              "div",
+              { class: "btn-col" },
+              photoInput,
+              button(user.avatarDataUrl ? "Trocar foto" : "Escolher foto", { icon: "user", variant: "subtle", onClick: () => photoInput.click() }),
+              user.avatarDataUrl
+                ? button("Remover foto", { icon: "trash", variant: "ghost", onClick: handlers.onRemoveProfilePhoto })
+                : null
+            )
+          ),
+          h("p", { class: "muted small" }, "A foto aparece no menu da sua conta. Sao aceitas imagens de ate 10 MB; o app reduz a foto antes de salvar.")
         ),
         card("Seguranca da conta", `Usuario: ${user.username}`, pwForm)
       )

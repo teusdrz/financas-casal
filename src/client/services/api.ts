@@ -52,6 +52,8 @@ export const Api = {
   me: () => request<{ user: User }>("GET", "/api/auth/me"),
   session: () => request<{ user: User | null }>("GET", "/api/auth/session"),
   changePassword: (current: string, next: string) => request<{ ok: boolean }>("POST", "/api/auth/password", { current, next }),
+  updateAvatar: (avatarDataUrl: string | null) =>
+    request<{ user: User }>("PUT", "/api/auth/avatar", { avatarDataUrl }),
   regenerateFeed: () => request<{ feedToken: string }>("POST", "/api/auth/feed-token"),
   googleCalendarStatus: () =>
     request<{

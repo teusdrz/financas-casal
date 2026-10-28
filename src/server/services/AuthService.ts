@@ -78,6 +78,7 @@ export const AuthService = {
       displayName: record.displayName,
       profileId: record.profileId,
       feedToken: record.feedToken,
+      avatarDataUrl: record.avatarDataUrl,
     };
     return { user, token: createSessionToken(user.id) };
   },

@@ -160,7 +160,10 @@ textarea.input { height: auto; padding: 10px 12px; resize: vertical; }
 .user-chip { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
 .user-chip strong { color: #fff; display: block; }
 .user-chip small { color: #8aa0bf; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #0e9f6e); color: #fff; display: grid; place-items: center; font-weight: 700; }
+.avatar { width: 34px; height: 34px; flex: 0 0 34px; overflow: hidden; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #0e9f6e); color: #fff; display: grid; place-items: center; font-weight: 700; }
+.avatar-image { width: 100%; height: 100%; object-fit: cover; }
+.profile-photo-row { display: flex; align-items: center; gap: 14px; }
+.profile-photo-preview { width: 72px; height: 72px; flex: 0 0 72px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, #3b82f6, #0e9f6e); color: #fff; display: grid; place-items: center; font-size: 24px; font-weight: 700; }
 .main { min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   position: sticky; top: 0; z-index: 30; background: rgba(243, 245, 249, 0.92); backdrop-filter: saturate(1.4) blur(8px);

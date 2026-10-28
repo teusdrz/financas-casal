@@ -22,6 +22,7 @@ export function buildApiRouter(): Router {
   api.get("/auth/session", AuthController.session);
   api.get("/auth/me", requireAuth, AuthController.me);
   api.post("/auth/password", requireAuth, AuthController.changePassword);
+  api.put("/auth/avatar", requireAuth, AuthController.updateAvatar);
   api.post("/auth/feed-token", requireAuth, AuthController.regenerateFeed);
 
   // Integracao Google Calendar

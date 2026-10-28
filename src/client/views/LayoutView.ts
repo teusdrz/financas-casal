@@ -53,7 +53,12 @@ export function renderShell(root: HTMLElement, user: User, handlers: ShellHandle
     h(
       "div",
       { class: "sidebar-footer" },
-      h("div", { class: "user-chip" }, h("div", { class: "avatar" }, user.displayName.charAt(0)), h("div", {}, h("strong", {}, user.displayName), h("small", {}, `@${user.username}`))),
+      h(
+        "div",
+        { class: "user-chip" },
+        h("div", { class: "avatar" }, h("span", { class: "avatar-initial" }, user.displayName.charAt(0)), h("img", { class: "avatar-image", ...(user.avatarDataUrl ? { src: user.avatarDataUrl } : {}), alt: `Foto de ${user.displayName}`, hidden: !user.avatarDataUrl })),
+        h("div", {}, h("strong", {}, user.displayName), h("small", {}, `@${user.username}`))
+      ),
       h("button", { class: "nav-item", type: "button", onclick: handlers.onLogout }, icon("logout"), h("span", {}, "Sair"))
     )
   );
@@ -113,6 +118,15 @@ export function renderShell(root: HTMLElement, user: User, handlers: ShellHandle
     content,
     update(state) {
       current = state;
+      const avatar = sidebar.querySelector<HTMLImageElement>(".avatar-image");
+      const initial = sidebar.querySelector<HTMLElement>(".avatar-initial");
+      if (avatar && initial) {
+        avatar.hidden = !state.user?.avatarDataUrl;
+        if (state.user?.avatarDataUrl) avatar.src = state.user.avatarDataUrl;
+        else avatar.removeAttribute("src");
+        initial.hidden = Boolean(state.user?.avatarDataUrl);
+        initial.textContent = state.user?.displayName.charAt(0) ?? "";
+      }
       title.textContent = TITLES[state.route];
       monthSelect.value = String(state.month);
       yearSelect.value = String(state.year);

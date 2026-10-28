@@ -10,6 +10,7 @@ export function applySchema(db: LocalDatabase): void {
       profile_id TEXT NOT NULL CHECK (profile_id IN ('ingrid','felipp')),
       password_hash TEXT NOT NULL,
       feed_token TEXT NOT NULL UNIQUE,
+      avatar_data_url TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -69,4 +70,9 @@ export function applySchema(db: LocalDatabase): void {
       FROM calendar_event_sync WHERE provider = 'google';
     DELETE FROM calendar_event_sync WHERE provider = 'google';
   `);
+
+  const userColumns = db.all("PRAGMA table_info(users)", [], (row) => String(row.name));
+  if (!userColumns.includes("avatar_data_url")) {
+    db.exec("ALTER TABLE users ADD COLUMN avatar_data_url TEXT;");
+  }
 }

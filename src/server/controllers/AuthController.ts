@@ -51,6 +51,25 @@ export const AuthController = {
     res.json({ ok: true });
   },
 
+  updateAvatar(req: Request, res: Response): void {
+    const body = (req.body ?? {}) as { avatarDataUrl?: unknown };
+    const avatarDataUrl = body.avatarDataUrl;
+    if (avatarDataUrl !== null && typeof avatarDataUrl !== "string") {
+      throw new HttpError(400, "Envie uma foto JPEG valida ou null para remover a foto.");
+    }
+
+    if (typeof avatarDataUrl === "string") {
+      const match = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(avatarDataUrl);
+      if (!match || Buffer.from(match[1], "base64").length > 256 * 1024) {
+        throw new HttpError(400, "A foto deve ser JPEG e ter no maximo 256 KB depois da compressao.");
+      }
+    }
+
+    const user = currentUser(res);
+    UserModel.updateAvatar(user.id, avatarDataUrl);
+    res.json({ user: UserModel.findById(user.id) });
+  },
+
   regenerateFeed(_req: Request, res: Response): void {
     const feedToken = AuthService.regenerateFeedToken(currentUser(res).id);
     res.json({ feedToken });
