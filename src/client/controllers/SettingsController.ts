@@ -1,7 +1,9 @@
+import { button } from "../core/dom.js";
 import { confirmDialog } from "../core/modal.js";
 import { toast } from "../core/toast.js";
 import { Api, ApiError } from "../services/api.js";
 import { store } from "../services/store.js";
+import type { User } from "../models/types.js";
 import { renderSettings } from "../views/SettingsView.js";
 import type { NotificationController } from "./NotificationController.js";
 import type { PageController } from "./PageController.js";
@@ -44,6 +46,72 @@ export class SettingsController implements PageController {
 
   private refresh(): void {
     if (this.content) void this.render(this.content);
+  }
+
+  private updatePhotoInPage(user: User): void {
+    const preview = this.content?.querySelector<HTMLElement>(".profile-photo-preview");
+    const actions = this.content?.querySelector<HTMLElement>(".profile-photo-row .btn-col");
+    if (!preview || !actions) return;
+
+    if (user.avatarDataUrl) {
+      const image = document.createElement("img");
+      image.className = "profile-photo-preview";
+      image.src = user.avatarDataUrl;
+      image.alt = `Foto de perfil de ${user.displayName}`;
+      preview.replaceWith(image);
+    } else {
+      const initial = document.createElement("div");
+      initial.className = "profile-photo-preview";
+      initial.setAttribute("aria-hidden", "true");
+      initial.textContent = user.displayName.charAt(0);
+      preview.replaceWith(initial);
+    }
+
+    const actionButtons = actions.querySelectorAll<HTMLButtonElement>("button");
+    const chooseButton = actionButtons[0];
+    const chooseLabel = chooseButton?.querySelector<HTMLElement>("span:not(.ico)");
+    if (chooseLabel) chooseLabel.textContent = user.avatarDataUrl ? "Trocar foto" : "Escolher foto";
+
+    const removeButton = actionButtons[1];
+    if (user.avatarDataUrl && !removeButton) {
+      actions.appendChild(
+        button("Remover foto", {
+          icon: "trash",
+          variant: "ghost",
+          onClick: () => void this.removeProfilePhoto(),
+        })
+      );
+    } else if (!user.avatarDataUrl) {
+      removeButton?.remove();
+    }
+  }
+
+  private async saveProfilePhoto(avatarDataUrl: string | null, errorContext: string): Promise<void> {
+    let user: User;
+    try {
+      ({ user } = await Api.updateAvatar(avatarDataUrl));
+    } catch (error) {
+      try {
+        const latest = (await Api.me()).user;
+        if (!latest || latest.avatarDataUrl !== avatarDataUrl) {
+          reportError(error, errorContext);
+          return;
+        }
+        user = latest;
+      } catch {
+        reportError(error, errorContext);
+        return;
+      }
+    }
+
+    store.set({ user });
+    this.updatePhotoInPage(user);
+    toast(
+      avatarDataUrl ? "Foto atualizada" : "Foto removida",
+      avatarDataUrl ? "Sua foto de perfil foi salva." : "Sua foto de perfil foi removida.",
+      "success"
+    );
+    this.refresh();
   }
 
   private async copy(text: string): Promise<void> {
@@ -119,10 +187,7 @@ export class SettingsController implements PageController {
       }
       if (!avatarDataUrl) throw new Error("Nao foi possivel reduzir a foto para o tamanho permitido.");
 
-      const { user } = await Api.updateAvatar(avatarDataUrl);
-      store.set({ user });
-      toast("Foto atualizada", "Sua foto de perfil foi salva.", "success");
-      this.refresh();
+      await this.saveProfilePhoto(avatarDataUrl, "Nao foi possivel salvar a foto");
     } catch (error) {
       reportError(error, "Nao foi possivel salvar a foto");
     }
@@ -130,10 +195,7 @@ export class SettingsController implements PageController {
 
   private async removeProfilePhoto(): Promise<void> {
     try {
-      const { user } = await Api.updateAvatar(null);
-      store.set({ user });
-      toast("Foto removida", "Sua foto de perfil foi removida.", "success");
-      this.refresh();
+      await this.saveProfilePhoto(null, "Nao foi possivel remover a foto");
     } catch (error) {
       reportError(error, "Nao foi possivel remover a foto");
     }
