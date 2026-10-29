@@ -10,7 +10,7 @@ import { renderCalendar } from "../views/CalendarView.js";
 import { emptyEvent, eventToInput, openEventForm } from "../views/forms.js";
 import { syncInstructions } from "../views/SettingsView.js";
 import type { PageController } from "./PageController.js";
-import { openIcs, reportError } from "./helpers.js";
+import { captureBrowserBackup, openIcs, reportError } from "./helpers.js";
 
 export class CalendarController implements PageController {
   private content: HTMLElement | null = null;
@@ -69,6 +69,7 @@ export class CalendarController implements PageController {
     openEventForm(emptyEvent(date, this.defaultOwner()), true, async (input) => {
       try {
         await Api.createEvent(input);
+        await captureBrowserBackup();
         toast("Compromisso criado", input.title, "success", 2500);
         this.selected = input.date;
         this.changed();
@@ -92,6 +93,7 @@ export class CalendarController implements PageController {
     openEventForm(eventToInput(item), false, async (input) => {
       try {
         await Api.updateEvent(item.id, input);
+        await captureBrowserBackup();
         toast("Compromisso atualizado", input.title, "success", 2500);
         this.selected = input.date;
         this.changed();
@@ -111,6 +113,7 @@ export class CalendarController implements PageController {
     if (!ok) return;
     try {
       await Api.deleteEvent(item.id);
+      await captureBrowserBackup();
       toast("Compromisso excluido", item.title, "success", 2500);
       this.changed();
     } catch (error) {
@@ -130,8 +133,10 @@ export class CalendarController implements PageController {
         const entry = entries.find((e) => e.id === item.entryId);
         if (!entry) return;
         await Api.updateEntry(entry.id, { ...entry, paid: !entry.paid });
+        await captureBrowserBackup();
       } else {
         await Api.updateEvent(item.id, { ...eventToInput(item), done: !item.done });
+        await captureBrowserBackup();
       }
       toast(item.done ? "Marcado como pendente" : "Marcado como concluido", item.title, "success", 2000);
       this.changed();

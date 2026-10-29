@@ -34,6 +34,11 @@ ao servidor quando possivel. Em hospedagem sem disco persistente, essa copia do 
 somente para o mesmo dispositivo e navegador; para compartilhar entre dispositivos, configure
 armazenamento persistente no servidor.
 
+Lancamentos financeiros e eventos do calendario tambem recebem uma copia automatica no IndexedDB
+deste navegador. Ao entrar, o app compara essa copia com o servidor e restaura a copia local se os
+dados do servidor tiverem sido perdidos. A recuperacao funciona somente neste navegador/aparelho;
+nao limpe os dados do navegador e continue baixando o backup JSON periodicamente.
+
 No primeiro start o banco `data/financas.sqlite` e criado com a estrutura de categorias
 de Janeiro a Dezembro de 2026 (valores zerados, prontos para preencher).
 

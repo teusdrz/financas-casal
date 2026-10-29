@@ -1,5 +1,6 @@
 import type {
   CalendarItem,
+  BackupPayload,
   Entry,
   EntryInput,
   EventInput,
@@ -79,6 +80,7 @@ export const Api = {
   deleteEvent: (id: number) => request<void>("DELETE", `/api/events/${id}`),
 
   importBackup: (payload: unknown) => request<{ entries: number; events: number }>("POST", "/api/backup/import", payload),
+  exportBackup: () => request<BackupPayload>("GET", "/api/backup/json"),
 
   urls: {
     eventIcs: (id: number) => `/api/events/${id}/export.ics`,

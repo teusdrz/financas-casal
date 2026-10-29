@@ -1,4 +1,5 @@
 import { toast } from "../core/toast.js";
+import { BrowserBackup } from "../services/BrowserBackup.js";
 import { ApiError } from "../services/api.js";
 
 /** Converte erros da API em mensagem amigavel (toast) e lista de detalhes para formularios. */
@@ -12,6 +13,20 @@ export function reportError(error: unknown, context: string): string[] {
   console.error(error);
   toast(context, "Erro inesperado. Tente novamente.", "error");
   return ["Erro inesperado."];
+}
+
+export async function captureBrowserBackup(): Promise<void> {
+  try {
+    await BrowserBackup.capture();
+  } catch (error) {
+    console.error("[backup] A alteracao foi enviada ao servidor, mas nao foi possivel atualizar a copia local.", error);
+    toast(
+      "Dados salvos no servidor; copia local falhou",
+      "Mantenha este navegador aberto e tente novamente. Verifique o espaco de armazenamento do navegador.",
+      "warning",
+      8000
+    );
+  }
 }
 
 /**

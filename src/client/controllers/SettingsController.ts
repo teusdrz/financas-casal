@@ -8,7 +8,7 @@ import type { User } from "../models/types.js";
 import { renderSettings } from "../views/SettingsView.js";
 import type { NotificationController } from "./NotificationController.js";
 import type { PageController } from "./PageController.js";
-import { reportError } from "./helpers.js";
+import { captureBrowserBackup, reportError } from "./helpers.js";
 
 export class SettingsController implements PageController {
   private content: HTMLElement | null = null;
@@ -238,6 +238,7 @@ export class SettingsController implements PageController {
     if (!ok) return;
     try {
       const result = await Api.importBackup(payload);
+      await captureBrowserBackup();
       toast("Backup restaurado", `${result.entries} lancamentos e ${result.events} eventos importados.`, "success");
     } catch (error) {
       reportError(error, "Falha ao restaurar");

@@ -151,7 +151,7 @@ export function renderSettings(container: HTMLElement, user: User, handlers: Set
         { class: "stack" },
         card(
           "Backup e exportacao",
-          "Os dados ficam no banco SQLite do servidor. Faca backups periodicos.",
+          "O app salva uma copia automatica neste navegador e tenta recuperar os dados se o servidor reiniciar.",
           h(
             "div",
             { class: "btn-col" },
@@ -161,7 +161,7 @@ export function renderSettings(container: HTMLElement, user: User, handlers: Set
             fileInput,
             h("label", { class: "btn btn-subtle", for: "import-file" }, icon("upload"), h("span", {}, "Restaurar backup (JSON)"))
           ),
-          h("p", { class: "muted small" }, "Restaurar substitui TODOS os lancamentos e eventos atuais pelo conteudo do arquivo.")
+          h("p", { class: "muted small" }, "A copia automatica vale para este navegador e aparelho. Nao limpe os dados do navegador. O backup JSON continua recomendado.")
         ),
         card(
           "Notificacoes",

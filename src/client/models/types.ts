@@ -102,6 +102,29 @@ export interface EventInput {
   done: boolean;
 }
 
+export interface BackupEvent {
+  id: number;
+  owner: EventOwner;
+  title: string;
+  date: string;
+  time: string | null;
+  category: EventCategory;
+  amount: number | null;
+  notes: string;
+  alarmMinutes: number;
+  done: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BackupPayload {
+  app: "financas-casal";
+  version: number;
+  exportedAt: string;
+  entries: Entry[];
+  events: BackupEvent[];
+}
+
 export interface SectionTotals {
   income: number;
   fixed: number;

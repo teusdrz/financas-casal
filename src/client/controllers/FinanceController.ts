@@ -9,7 +9,7 @@ import { store } from "../services/store.js";
 import { renderFinance } from "../views/FinanceView.js";
 import { openEntryForm } from "../views/forms.js";
 import type { PageController } from "./PageController.js";
-import { openIcs, reportError } from "./helpers.js";
+import { captureBrowserBackup, openIcs, reportError } from "./helpers.js";
 
 function toInput(e: Entry): EntryInput {
   return { profileId: e.profileId, year: e.year, month: e.month, section: e.section, description: e.description, amount: e.amount, dueDay: e.dueDay, paid: e.paid };
@@ -64,6 +64,7 @@ export class FinanceController implements PageController {
       async (input) => {
         try {
           await Api.createEntry(input);
+          await captureBrowserBackup();
           toast("Lancamento adicionado", input.description, "success", 2500);
           this.refresh();
           return null;
@@ -81,6 +82,7 @@ export class FinanceController implements PageController {
   private async save(id: number, input: EntryInput, notify: boolean): Promise<string[] | null> {
     try {
       await Api.updateEntry(id, input);
+      await captureBrowserBackup();
       if (notify) toast("Lancamento atualizado", input.description, "success", 2500);
       this.refresh();
       return null;
@@ -96,6 +98,7 @@ export class FinanceController implements PageController {
     if (!ok) return;
     try {
       await Api.deleteEntry(entry.id);
+      await captureBrowserBackup();
       toast("Lancamento excluido", entry.description, "success", 2500);
       this.refresh();
     } catch (error) {
@@ -119,6 +122,7 @@ export class FinanceController implements PageController {
       for (const p of targets) {
         copied += (await Api.copyMonth(p, year, month)).copied;
       }
+      await captureBrowserBackup();
       toast("Copia concluida", copied === 0 ? "Nenhum item novo: este mes ja tem todos os itens do anterior." : `${copied} item(s) copiado(s).`, "success");
       this.refresh();
     } catch (error) {

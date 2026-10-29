@@ -6,6 +6,7 @@ import type { Route } from "../models/types.js";
 import { CATEGORY_META, OWNER_NAMES } from "../models/types.js";
 import { Api, ApiError, UNAUTHORIZED_EVENT } from "../services/api.js";
 import { AvatarCache } from "../services/avatarCache.js";
+import { BrowserBackup } from "../services/BrowserBackup.js";
 import { Cache } from "../services/cache.js";
 import { store } from "../services/store.js";
 import { destroyAllCharts } from "../views/charts.js";
@@ -60,7 +61,7 @@ export class AppController {
     try {
       const { user } = await Api.session();
       if (user) {
-        this.enter(AvatarCache.restore(user));
+        await this.enter(AvatarCache.restore(user));
         return;
       }
     } catch {
@@ -69,7 +70,15 @@ export class AppController {
     this.showLogin();
   }
 
-  private enter(user: NonNullable<ReturnType<typeof store.get>["user"]>): void {
+  private async enter(user: NonNullable<ReturnType<typeof store.get>["user"]>): Promise<void> {
+    const backupStatus = await BrowserBackup.initialize();
+    if (backupStatus.restored) {
+      toast("Dados recuperados", "Os dados deste navegador foram restaurados para o app.", "success");
+    }
+    if (backupStatus.warning) {
+      toast("Copia de seguranca local", backupStatus.warning, "warning", 10000);
+    }
+
     // Atualiza o estado antes de montar o layout para evitar renderizacao duplicada.
     store.set({ user, route: routeFromHash() });
     this.shell = renderShell(this.root, user, {
@@ -115,7 +124,7 @@ export class AppController {
     renderLogin(this.root, async (username, password) => {
       try {
         const { user } = await Api.login(username, password);
-        this.enter(AvatarCache.restore(user));
+        await this.enter(AvatarCache.restore(user));
         toast(`Bem-vindo(a), ${user.displayName}`, "Dados carregados do banco local.", "success", 3000);
         return null;
       } catch (error) {
