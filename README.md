@@ -29,7 +29,10 @@ Abra **http://localhost:3000**.
 Troque as senhas em **Integracoes e backup > Seguranca da conta**.
 
 Cada perfil pode escolher ou remover sua propria foto em **Integracoes e backup > Foto de perfil**.
-A imagem e reduzida e salva no banco do app; Ingrid e Felipp mantem fotos independentes.
+A foto e guardada neste navegador para continuar disponivel apos fechar e reabrir o app, e enviada
+ao servidor quando possivel. Em hospedagem sem disco persistente, essa copia do navegador vale
+somente para o mesmo dispositivo e navegador; para compartilhar entre dispositivos, configure
+armazenamento persistente no servidor.
 
 No primeiro start o banco `data/financas.sqlite` e criado com a estrutura de categorias
 de Janeiro a Dezembro de 2026 (valores zerados, prontos para preencher).

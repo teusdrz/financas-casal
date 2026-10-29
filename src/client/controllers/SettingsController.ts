@@ -2,6 +2,7 @@ import { button } from "../core/dom.js";
 import { confirmDialog } from "../core/modal.js";
 import { toast } from "../core/toast.js";
 import { Api, ApiError } from "../services/api.js";
+import { AvatarCache } from "../services/avatarCache.js";
 import { store } from "../services/store.js";
 import type { User } from "../models/types.js";
 import { renderSettings } from "../views/SettingsView.js";
@@ -86,32 +87,56 @@ export class SettingsController implements PageController {
     }
   }
 
-  private async saveProfilePhoto(avatarDataUrl: string | null, errorContext: string): Promise<void> {
-    let user: User;
+  private async saveProfilePhoto(avatarDataUrl: string | null): Promise<void> {
+    const currentUser = store.get().user;
+    if (!currentUser) return;
+
     try {
-      ({ user } = await Api.updateAvatar(avatarDataUrl));
+      AvatarCache.save(currentUser.username, avatarDataUrl);
     } catch (error) {
-      try {
-        const latest = (await Api.me()).user;
-        if (!latest || latest.avatarDataUrl !== avatarDataUrl) {
-          reportError(error, errorContext);
-          return;
-        }
-        user = latest;
-      } catch {
-        reportError(error, errorContext);
-        return;
-      }
+      console.error("[avatar] Falha ao salvar a foto neste navegador.", error);
+      toast("Nao foi possivel guardar a foto", "Verifique o espaco disponivel no navegador e tente novamente.", "error");
+      return;
     }
 
-    store.set({ user });
-    this.updatePhotoInPage(user);
-    toast(
-      avatarDataUrl ? "Foto atualizada" : "Foto removida",
-      avatarDataUrl ? "Sua foto de perfil foi salva." : "Sua foto de perfil foi removida.",
-      "success"
-    );
-    this.refresh();
+    const updatedUser = { ...currentUser, avatarDataUrl };
+    store.set({ user: updatedUser });
+    this.updatePhotoInPage(updatedUser);
+
+    try {
+      const { user } = await Api.updateAvatar(avatarDataUrl);
+      const synchronizedUser = { ...user, avatarDataUrl };
+      store.set({ user: synchronizedUser });
+      toast(
+        avatarDataUrl ? "Foto atualizada" : "Foto removida",
+        avatarDataUrl ? "Sua foto foi salva neste navegador e sincronizada com o servidor." : "Sua foto foi removida neste navegador e no servidor.",
+        "success"
+      );
+    } catch (error) {
+      try {
+        const { user } = await Api.me();
+        if (user.avatarDataUrl === avatarDataUrl) {
+          const synchronizedUser = { ...user, avatarDataUrl };
+          store.set({ user: synchronizedUser });
+          toast(
+            avatarDataUrl ? "Foto atualizada" : "Foto removida",
+            avatarDataUrl ? "Sua foto foi salva neste navegador e sincronizada com o servidor." : "Sua foto foi removida neste navegador e no servidor.",
+            "success"
+          );
+          return;
+        }
+      } catch (verificationError) {
+        console.error("[avatar] Nao foi possivel confirmar a sincronizacao da foto.", verificationError);
+      }
+      console.error("[avatar] Foto mantida neste navegador; sincronizacao com servidor falhou.", error);
+      const details = error instanceof ApiError ? error.message : "Falha de comunicacao com o servidor.";
+      toast(
+        avatarDataUrl ? "Foto salva neste navegador" : "Foto removida neste navegador",
+        `A foto continua disponivel neste navegador, mas nao foi sincronizada com o servidor. ${details}`,
+        "warning",
+        8000
+      );
+    }
   }
 
   private async copy(text: string): Promise<void> {
@@ -187,7 +212,7 @@ export class SettingsController implements PageController {
       }
       if (!avatarDataUrl) throw new Error("Nao foi possivel reduzir a foto para o tamanho permitido.");
 
-      await this.saveProfilePhoto(avatarDataUrl, "Nao foi possivel salvar a foto");
+      await this.saveProfilePhoto(avatarDataUrl);
     } catch (error) {
       reportError(error, "Nao foi possivel salvar a foto");
     }
@@ -195,7 +220,7 @@ export class SettingsController implements PageController {
 
   private async removeProfilePhoto(): Promise<void> {
     try {
-      await this.saveProfilePhoto(null, "Nao foi possivel remover a foto");
+      await this.saveProfilePhoto(null);
     } catch (error) {
       reportError(error, "Nao foi possivel remover a foto");
     }

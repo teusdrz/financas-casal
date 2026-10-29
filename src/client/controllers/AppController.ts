@@ -5,6 +5,7 @@ import { toast } from "../core/toast.js";
 import type { Route } from "../models/types.js";
 import { CATEGORY_META, OWNER_NAMES } from "../models/types.js";
 import { Api, ApiError, UNAUTHORIZED_EVENT } from "../services/api.js";
+import { AvatarCache } from "../services/avatarCache.js";
 import { Cache } from "../services/cache.js";
 import { store } from "../services/store.js";
 import { destroyAllCharts } from "../views/charts.js";
@@ -59,7 +60,7 @@ export class AppController {
     try {
       const { user } = await Api.session();
       if (user) {
-        this.enter(user);
+        this.enter(AvatarCache.restore(user));
         return;
       }
     } catch {
@@ -114,7 +115,7 @@ export class AppController {
     renderLogin(this.root, async (username, password) => {
       try {
         const { user } = await Api.login(username, password);
-        this.enter(user);
+        this.enter(AvatarCache.restore(user));
         toast(`Bem-vindo(a), ${user.displayName}`, "Dados carregados do banco local.", "success", 3000);
         return null;
       } catch (error) {
