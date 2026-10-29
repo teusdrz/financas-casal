@@ -28,12 +28,19 @@ export function createApp(): Express {
     express.static(env.publicDir, {
       index: "index.html",
       maxAge: env.isProduction ? "1h" : 0,
+      setHeaders(res, filePath) {
+        const extension = path.extname(filePath);
+        if (extension === ".html" || extension === ".js") {
+          res.setHeader("Cache-Control", "no-cache, must-revalidate");
+        }
+      },
     })
   );
 
   // Fallback da SPA: rotas sem extensao de arquivo (fora da API) devolvem o index.html.
   // Arquivos inexistentes (ex.: /js/x.js) recebem 404 em vez de HTML.
   app.get(/^\/(?!api\/|calendar\/)(?!.*\.[a-z0-9]+$).*/i, (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, must-revalidate");
     res.sendFile(path.join(env.publicDir, "index.html"));
   });
 
