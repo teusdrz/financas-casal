@@ -92,10 +92,10 @@ export class SettingsController implements PageController {
     if (!currentUser) return;
 
     try {
-      AvatarCache.save(currentUser.username, avatarDataUrl);
+      await AvatarCache.save(currentUser.username, avatarDataUrl);
     } catch (error) {
       console.error("[avatar] Falha ao salvar a foto neste navegador.", error);
-      toast("Nao foi possivel guardar a foto", "Verifique o espaco disponivel no navegador e tente novamente.", "error");
+      toast("Nao foi possivel guardar a foto", error instanceof Error ? error.message : "Verifique o espaco disponivel no navegador e tente novamente.", "error");
       return;
     }
 

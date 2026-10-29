@@ -61,7 +61,7 @@ export class AppController {
     try {
       const { user } = await Api.session();
       if (user) {
-        await this.enter(AvatarCache.restore(user));
+        await this.enter(await AvatarCache.restore(user));
         return;
       }
     } catch {
@@ -124,7 +124,7 @@ export class AppController {
     renderLogin(this.root, async (username, password) => {
       try {
         const { user } = await Api.login(username, password);
-        await this.enter(AvatarCache.restore(user));
+        await this.enter(await AvatarCache.restore(user));
         toast(`Bem-vindo(a), ${user.displayName}`, "Dados carregados do banco local.", "success", 3000);
         return null;
       } catch (error) {
